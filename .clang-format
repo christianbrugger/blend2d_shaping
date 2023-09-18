@@ -1,0 +1,17 @@
+# Use the Google style in this project.
+BasedOnStyle: Google
+
+IndentWidth: 4
+ColumnLimit: 90
+
+---
+Language:    	Cpp
+
+UseTab: Never
+Standard: c++20
+IncludeBlocks: Regroup
+
+SpaceBeforeCpp11BracedList: true
+SeparateDefinitionBlocks: Always
+AllowShortFunctionsOnASingleLine: Empty
+
