@@ -36,7 +36,7 @@ external/blend2d_shaping/
 external/harfbuzz/
 ```
 
-Then in your project you can simply add this project as a subproject, adapting the path to external.
+Then in your project you can simply add this project via include:
 
 ```cmake
 include("${BLEND2D_SHAPING_DIR}/CMakeLists.txt")
