@@ -28,7 +28,8 @@ if (NOT DEFINED BLEND2D_DIR)
         message(FATAL "Unable to find blend2d, please visit <https://blend2d.com/doc/build-instructions.html>")
     endif()
 endif()
-include("${BLEND2D_DIR}/CMakeLists.txt")
+set(BLEND2D_STATIC TRUE)
+add_subdirectory("${BLEND2D_DIR}" "${CMAKE_BINARY_DIR}/external/blend2d" EXCLUDE_FROM_ALL SYSTEM)
 
 # Find harfbuzz
 if (NOT DEFINED HB_DIR)
@@ -42,14 +43,14 @@ if (NOT DEFINED HB_DIR)
         message(FATAL "Unable to find harfbuzz")
     endif()
 endif()
-add_subdirectory("${HB_DIR}" "${CMAKE_BINARY_DIR}/external/harfbuzz" EXCLUDE_FROM_ALL)
+add_subdirectory("${HB_DIR}" "${CMAKE_BINARY_DIR}/external/harfbuzz" EXCLUDE_FROM_ALL SYSTEM)
 
 
 
 
 # Library blend2d_shaping
 add_library(blend2d_shaping STATIC
-	src/blend2d_shaping.cpp
+	"src/blend2d_shaping.cpp"
 )
 target_include_directories(blend2d_shaping PUBLIC
 	src/

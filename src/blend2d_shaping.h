@@ -3,88 +3,81 @@
 
 #include <blend2d.h>
 
+#include <cstdint>
+#include <memory>
 #include <span>
 #include <string>
 #include <string_view>
 #include <vector>
 
-struct hb_blob_t;
 struct hb_face_t;
 struct hb_font_t;
 
 namespace blend2d_shaping {
 
-class HBFontFace final {
+class HbFontFace final {
    public:
-    [[nodiscard]] explicit HBFontFace();
-    [[nodiscard]] explicit HBFontFace(std::span<const uint8_t> font_data,
-                                      uint32_t font_index = 0);
-    [[nodiscard]] explicit HBFontFace(const std::string &filename,
-                                      uint32_t font_index = 0);
-    ~HBFontFace();
+    explicit HbFontFace();
+    explicit HbFontFace(std::span<const char> font_data, unsigned int font_index = 0);
+    explicit HbFontFace(std::span<const uint8_t> font_data, unsigned int font_index = 0);
 
-    HBFontFace(const HBFontFace &);
-    HBFontFace(HBFontFace &&) noexcept;
-    HBFontFace &operator=(const HBFontFace &);
-    HBFontFace &operator=(HBFontFace &&) noexcept;
-
+    [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto hb_face() const noexcept -> hb_face_t *;
 
    private:
-    hb_face_t *hb_face_;
+    // immutable preserves whole parts relationship
+    std::shared_ptr<hb_face_t> face_;
 };
 
-class HBFont final {
+static_assert(std::semiregular<HbFontFace>);
+
+class HbFont final {
    public:
-    [[nodiscard]] explicit HBFont();
-    [[nodiscard]] explicit HBFont(const HBFontFace &face, float font_size);
-    ~HBFont();
+    explicit HbFont();
+    explicit HbFont(const HbFontFace &face);
 
-    HBFont(const HBFont &);
-    HBFont(HBFont &&) noexcept;
-    HBFont &operator=(const HBFont &);
-    HBFont &operator=(HBFont &&) noexcept;
-
-    [[nodiscard]] auto font_size() const noexcept -> float;
+    [[nodiscard]] auto empty() const -> bool;
     [[nodiscard]] auto hb_font() const noexcept -> hb_font_t *;
 
    private:
-    hb_font_t *hb_font_;  // TODO not_null
-    float font_size_ {};
+    // immutable preserves whole parts relationship
+    std::shared_ptr<hb_font_t> font_;
 };
 
-class HBShapedText {
-   public:
-    [[nodiscard]] explicit HBShapedText() = default;
-    [[nodiscard]] explicit HBShapedText(std::string_view text_utf8,
-                                        const HBFontFace &face, float font_size);
-    [[nodiscard]] explicit HBShapedText(std::string_view text_utf8, const HBFont &font);
+static_assert(std::semiregular<HbFont>);
 
-    [[nodiscard]] auto operator==(const HBShapedText &other) const -> bool = default;
+class HbShapedText {
+   public:
+    explicit HbShapedText() = default;
+    explicit HbShapedText(std::string_view text_utf8, const HbFont &font,
+                          float font_size);
+
+    [[nodiscard]] auto empty() const -> bool;
+    [[nodiscard]] auto operator==(const HbShapedText &other) const -> bool = default;
 
     // glyph run of the shaped text
     [[nodiscard]] auto glyph_run() const noexcept -> BLGlyphRun;
-
-    /// bounding box of the shaped text relative to the baseline
+    // bounding box of the shaped text relative to the baseline
     [[nodiscard]] auto bounding_box() const noexcept -> BLBox;
-    /// rect of the shaped text relative to the baseline
+    // rect of the shaped text relative to the baseline
     [[nodiscard]] auto bounding_rect() const noexcept -> BLRect;
 
    private:
     std::vector<uint32_t> codepoints_ {};
     std::vector<BLGlyphPlacement> placements_ {};
-
     BLBox bounding_box_ {};
 };
 
+static_assert(std::regular<HbShapedText>);
+
 struct FontFace {
     BLFontFace bl_face {};
-    HBFontFace hb_face {};
+    HbFontFace hb_face {};
 };
 
 struct Font {
     BLFont bl_font {};
-    HBFont hb_font {};
+    HbFont hb_font {};
 };
 
 [[nodiscard]] auto create_face_from_file(const char *filename, uint32_t face_index = 0)
